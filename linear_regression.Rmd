@@ -111,7 +111,42 @@ broom::tidy(fit)
 broom::glance(fit)
 ```
 
+## Diagnostics
+
+```{r}
+nyc_airbnb %>% 
+  modelr::add_residuals(fit) %>%
+  ggplot(aes(x = borough, y = resid)) +
+  geom_violin() +
+  ylim(-500, 1500) # zoom in
+
+nyc_airbnb %>% 
+  modelr::add_residuals(fit) %>% 
+  ggplot(aes(x = stars, y = resid)) + 
+  geom_point() +
+  facet_wrap(. ~ borough)
+```
 
 
+## Hypothesis tests
 
+This does t-test by  default
+
+```{r}
+# R does t test
+fit %>% 
+  broom::tidy()
+```
+
+What about the significance of `borough`.
+
+```{r}
+fit_null = lm(price ~ stars, data = nyc_airbnb)
+fit_alt = lm(price ~ stars + borough, data = nyc_airbnb)
+
+# F test and p-value
+anova(fit_null, fit_alt) %>% 
+  broom::tidy()
+
+```
 
