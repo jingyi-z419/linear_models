@@ -1,11 +1,12 @@
 ---
-title: ""
+title: "Bootstrapping"
 author: Jingyi Zhang
 output: github_document
 ---
 
 ```{r setup, include = FALSE}
 library(tidyverse)
+library(p8105.datasets)
 
 knitr::opts_chunk$set(
   fig.width = 6,
@@ -13,7 +14,7 @@ knitr::opts_chunk$set(
   out.width = "90%"
 )
 
-theme_set(theme_grey() + theme(legend.position = "bottom"))
+theme_set(theme_minimal() + theme(legend.position = "bottom"))
           
 options(
   ggplot2.continuous.colour = "viridis",
@@ -22,6 +23,81 @@ options(
 
 scale_colour_discrete = scale_colour_viridis_d
 scale_fill_discrete = scale_fill_viridis_d
+
+set.seed(7)
 ```
+
+## Simulate data
+
+```{r}
+n_samp = 250
+
+sim_df_const =
+  tibble(
+    x = rnorm(n_samp, 1, 1),
+    error = rnorm(n_samp, 0, 1),
+    y = 2 + 3 * x + error
+  )
+
+sim_df_nonconst = 
+  sim_df_const %>% 
+  mutate(
+    error = error * .75 * x,
+    y = 2 + 3 * x + error
+  )
+```
+
+Plot the datasets
+
+```{r}
+sim_df_const %>% 
+  ggplot(aes(x = x, y = y)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+
+sim_df_nonconst %>% 
+  ggplot(aes(x = x, y = y)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+```
+
+
+```{r}
+lm(y ~ x, data = sim_df_const) %>% broom::tidy()
+lm(y ~ x, data = sim_df_nonconst) %>% broom::tidy()
+```
+
+## Draw one bootstrap sample
+
+```{r}
+boot_sample = function(df) {
+  
+  sample_frac(df, replace = TRUE) %>% 
+    arrange(x)
+  
+}
+```
+
+Check if this works ..
+
+```{r}
+# you get a different line each time -- generating bootstrap samples
+boot_sample(sim_df_nonconst) %>%
+  ggplot(aes(x = x, y = y)) +
+  geom_point(alpha = .3) +
+  geom_smooth(method = "lm") +
+  ylim(-5, 16)
+```
+
+
+```{r}
+boot_sample(sim_df_nonconst) %>%
+  lm(y ~ x, data = .) %>% 
+  broom::tidy()
+```
+
+
+
+
 
 
