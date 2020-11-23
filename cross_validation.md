@@ -1,34 +1,10 @@
----
-title: "Cross Validation"
-author: Jingyi Zhang
-output: github_document
----
-
-```{r setup, include = FALSE}
-library(tidyverse)
-library(modelr)
-library(mgcv)
-
-knitr::opts_chunk$set(
-  fig.width = 6,
-  fig.asp = .6,
-  out.width = "90%"
-)
-
-theme_set(theme_minimal() + theme(legend.position = "bottom"))
-          
-options(
-  ggplot2.continuous.colour = "viridis",
-  ggplot2.continuous.fill = "viridis"
-)
-
-scale_colour_discrete = scale_colour_viridis_d
-scale_fill_discrete = scale_fill_viridis_d
-```
+Cross Validation
+================
+Jingyi Zhang
 
 ## Simulate data
 
-```{r}
+``` r
 nonlin_df =
   tibble(
     id = 1:100,
@@ -39,24 +15,26 @@ nonlin_df =
 
 Look at the data
 
-```{r}
+``` r
 nonlin_df %>% 
   ggplot(aes(x = x, y = y)) +
   geom_point()
 ```
 
-## Cross validation -- by hand
+<img src="cross_validation_files/figure-gfm/unnamed-chunk-2-1.png" width="90%" />
+
+## Cross validation – by hand
 
 Get training and testing datasets
 
-```{r}
+``` r
 train_df = sample_n(nonlin_df, size = 80)
 test_df = anti_join(nonlin_df, train_df, by = "id")
 ```
 
 Fit three models.
 
-```{r}
+``` r
 linear_mod = lm(y ~ x, data = train_df)
 smooth_mod = gam(y ~ s(x), data = train_df)
 wiggly_mod = gam(y ~ s(x, k =30), sp = 10e-6, data = train_df)
@@ -66,7 +44,7 @@ Can I see what i just did?
 
 linear model
 
-```{r}
+``` r
 train_df %>% 
   add_predictions(wiggly_mod) %>% 
   ggplot(aes(x = x, y = y)) +
@@ -74,8 +52,9 @@ train_df %>%
   geom_line(aes(y = pred), color = "red")
 ```
 
+<img src="cross_validation_files/figure-gfm/unnamed-chunk-5-1.png" width="90%" />
 
-```{r}
+``` r
 train_df %>% 
   gather_predictions(linear_mod, smooth_mod, wiggly_mod) %>% 
   ggplot(aes(x = x, y = y)) +
@@ -84,15 +63,24 @@ train_df %>%
   facet_grid(. ~ model)
 ```
 
+<img src="cross_validation_files/figure-gfm/unnamed-chunk-6-1.png" width="90%" />
+
 Look at prediction accuracy.
 
-```{r}
+``` r
 rmse(linear_mod, test_df)
+```
+
+    ## [1] 0.9733261
+
+``` r
 rmse(smooth_mod, test_df)
+```
+
+    ## [1] 0.3964166
+
+``` r
 rmse(wiggly_mod, test_df)
 ```
 
-
-
-
-
+    ## [1] 0.4339285
